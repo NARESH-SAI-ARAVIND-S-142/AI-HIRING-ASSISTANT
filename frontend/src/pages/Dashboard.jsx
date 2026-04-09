@@ -18,7 +18,8 @@ export default function Dashboard() {
 
   const fetchCandidates = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/candidates');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/api/candidates`);
       const data = await res.json();
       if (data.success) {
         setCandidates(data.candidates);
