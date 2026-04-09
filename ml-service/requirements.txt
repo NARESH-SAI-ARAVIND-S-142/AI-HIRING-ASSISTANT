@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pymupdf>=1.24.0
+scikit-learn
+python-multipart
+pydantic
+numpy

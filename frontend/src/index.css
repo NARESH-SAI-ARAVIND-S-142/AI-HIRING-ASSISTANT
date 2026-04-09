@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-slate-200 antialiased font-sans overflow-x-hidden selection:bg-brand-primary/30 selection:text-white;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism */
+  .glass-card {
+    @apply bg-brand-card/60 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl;
+  }
+  
+  .glass-surface {
+    @apply bg-brand-surface/50 backdrop-blur-lg border border-brand-border rounded-xl;
+  }
+  
+  /* Buttons */
+  .btn-primary {
+    @apply px-4 py-2.5 bg-gradient-to-r from-brand-primary to-brand-cyan hover:from-brand-primaryHover hover:to-cyan-500 text-white rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed justify-center flex items-center gap-2;
+  }
+  
+  .btn-outline {
+    @apply px-4 py-2.5 border border-white/10 hover:border-white/30 hover:bg-white/5 rounded-xl text-slate-300 hover:text-white transition-all active:scale-95 font-medium flex items-center gap-2;
+  }
+
+  /* Fancy text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-primary via-purple-400 to-brand-cyan;
+  }
+}
+
+/* Custom Webkit scrollbar for premium dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050510; 
+}
+::-webkit-scrollbar-thumb {
+  background: #1f1f3a; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a5a; 
+}
