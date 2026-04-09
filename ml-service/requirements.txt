@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+gunicorn
 pymupdf>=1.24.0
 scikit-learn
 python-multipart
