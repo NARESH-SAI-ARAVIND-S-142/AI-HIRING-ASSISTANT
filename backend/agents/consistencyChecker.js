@@ -15,7 +15,9 @@ Return a JSON object:
   "mismatches": [
     {"claim": "Expert in Rust", "evidence": "No Rust repositories or commits found"}
   ],
-  "summary": "General summary of consistency."
+  "summary": "General summary of consistency.",
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the evidence."
 }
 
 Resume Data:

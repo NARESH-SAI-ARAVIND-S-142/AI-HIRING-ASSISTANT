@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './db/client.js';
 import evaluateRoute from './routes/evaluate.js';
 import candidatesRoute from './routes/candidates.js';
+import evaluationsRoute from './routes/evaluations.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,7 @@ app.use(express.json());
 // Routes
 app.use('/api/evaluate', evaluateRoute);
 app.use('/api/candidates', candidatesRoute);
+app.use('/api/evaluations', evaluationsRoute);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'backend' });

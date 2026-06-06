@@ -8,21 +8,7 @@ import io
 from typing import Optional
 
 
-# Common skills to look for in resumes
-KNOWN_SKILLS = [
-    "python", "javascript", "typescript", "java", "c++", "c#", "go", "rust", "ruby",
-    "swift", "kotlin", "php", "scala", "r", "matlab", "sql", "html", "css", "sass",
-    "react", "angular", "vue", "next.js", "nuxt.js", "svelte", "node.js", "express",
-    "django", "flask", "fastapi", "spring", "spring boot", ".net", "rails",
-    "tensorflow", "pytorch", "keras", "scikit-learn", "pandas", "numpy", "opencv",
-    "docker", "kubernetes", "aws", "azure", "gcp", "terraform", "ansible",
-    "jenkins", "github actions", "ci/cd", "git", "linux",
-    "mongodb", "postgresql", "mysql", "redis", "elasticsearch", "cassandra",
-    "graphql", "rest api", "grpc", "websocket", "kafka", "rabbitmq",
-    "machine learning", "deep learning", "nlp", "computer vision",
-    "data science", "data engineering", "devops", "cloud computing",
-    "agile", "scrum", "jira", "figma", "tailwind", "bootstrap",
-]
+
 
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
@@ -97,17 +83,57 @@ def extract_linkedin_url(text: str) -> Optional[str]:
     return None
 
 
+SKILL_CATEGORIES = {
+    "languages": ["python", "javascript", "typescript", "java", "c++", "c#", "go", "rust", "ruby", "swift", "kotlin", "php", "scala", "r", "matlab", "sql", "html", "css", "sass"],
+    "frameworks": ["react", "angular", "vue", "next.js", "nuxt.js", "svelte", "node.js", "express", "django", "flask", "fastapi", "spring", "spring boot", ".net", "rails", "tensorflow", "pytorch", "keras", "scikit-learn", "pandas", "numpy", "opencv", "tailwind", "bootstrap"],
+    "cloud": ["aws", "azure", "gcp"],
+    "databases": ["mongodb", "postgresql", "mysql", "redis", "elasticsearch", "cassandra"],
+    "tools": ["docker", "kubernetes", "terraform", "ansible", "jenkins", "github actions", "ci/cd", "git", "linux", "jira", "figma", "kafka", "rabbitmq"],
+    "soft_skills": ["agile", "scrum", "machine learning", "deep learning", "nlp", "computer vision", "data science", "data engineering", "devops", "cloud computing"]
+}
+
+def extract_skills_graph(text: str) -> dict:
+    """Extract structured skills graph with categories, proficiency, and gaps."""
+    text_lower = text.lower()
+    
+    graph = {cat: [] for cat in SKILL_CATEGORIES.keys()}
+    flat_skills = set()
+    
+    for cat, skills in SKILL_CATEGORIES.items():
+        for skill in skills:
+            pattern = r'\b' + re.escape(skill) + r'\b' if len(skill) <= 3 else skill
+            matches = len(re.findall(pattern, text_lower))
+            if matches > 0:
+                flat_skills.add(skill)
+                proficiency = "expert" if matches >= 3 else "experienced" if matches == 2 else "mentioned"
+                graph[cat].append({
+                    "name": skill,
+                    "proficiency": proficiency,
+                    "evidence": f"Mentioned {matches} times"
+                })
+                
+    # Adjacency checks for gaps
+    gaps = []
+    if "react" in flat_skills and not ("javascript" in flat_skills or "typescript" in flat_skills):
+        gaps.append("javascript")
+    if "docker" in flat_skills and not ("kubernetes" in flat_skills or "ci/cd" in flat_skills):
+        gaps.append("kubernetes")
+    if "machine learning" in flat_skills and not "python" in flat_skills:
+        gaps.append("python")
+    if ("next.js" in flat_skills or "vue" in flat_skills) and "tailwind" not in flat_skills and "css" not in flat_skills:
+        gaps.append("css")
+        
+    graph["skill_gaps"] = gaps
+    return graph
+
 def extract_skills(text: str) -> list:
-    """Extract skills by matching against known skill keywords."""
+    """Extract skills (flat list for backward compatibility)."""
     text_lower = text.lower()
     found_skills = []
-    for skill in KNOWN_SKILLS:
-        # Use word boundary matching for short skills, substring for longer ones
-        if len(skill) <= 3:
-            if re.search(r'\b' + re.escape(skill) + r'\b', text_lower):
-                found_skills.append(skill)
-        else:
-            if skill in text_lower:
+    for cat_skills in SKILL_CATEGORIES.values():
+        for skill in cat_skills:
+            pattern = r'\b' + re.escape(skill) + r'\b' if len(skill) <= 3 else skill
+            if re.search(pattern, text_lower):
                 found_skills.append(skill)
     return sorted(list(set(found_skills)))
 
@@ -236,10 +262,8 @@ def compute_years_experience(experiences: list) -> float:
     return round(total_months / 12, 1)
 
 
-def parse_resume(pdf_bytes: bytes) -> dict:
-    """Main entry point — parse a PDF resume and return structured data."""
-    text = extract_text_from_pdf(pdf_bytes)
-    
+def parse_resume_text(text: str) -> dict:
+    """Parse resume from raw text instead of PDF bytes."""
     skills = extract_skills(text)
     experience = extract_experience(text)
     projects = extract_projects(text)
@@ -254,6 +278,7 @@ def parse_resume(pdf_bytes: bytes) -> dict:
         "github_username": extract_github_username(text),
         "linkedin_url": extract_linkedin_url(text),
         "skills": skills,
+        "skills_graph": extract_skills_graph(text),
         "experience": experience,
         "projects": projects,
         "education": education,
@@ -262,3 +287,9 @@ def parse_resume(pdf_bytes: bytes) -> dict:
         "project_count": len(projects),
         "raw_text": text[:5000],  # cap raw text for LLM context
     }
+
+
+def parse_resume(pdf_bytes: bytes) -> dict:
+    """Main entry point — parse a PDF resume and return structured data."""
+    text = extract_text_from_pdf(pdf_bytes)
+    return parse_resume_text(text)

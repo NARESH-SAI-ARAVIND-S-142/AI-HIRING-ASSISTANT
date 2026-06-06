@@ -16,7 +16,9 @@ Return a JSON object exactly like this:
   "skill_analyst": { "verdict": "Accept", "reasoning": "..." },
   "practical_evaluator": { "verdict": "Neutral", "reasoning": "..." },
   "consensus_verdict": "Review", // Must be one of: "Shortlist", "Review", "Reject"
-  "consensus_reasoning": "..."
+  "consensus_reasoning": "...",
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the debate consensus."
 }
 
 Candidate Data:

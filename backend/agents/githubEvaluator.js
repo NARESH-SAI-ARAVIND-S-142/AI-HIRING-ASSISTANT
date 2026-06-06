@@ -12,7 +12,9 @@ Format:
   "primary_languages": ["lang1", "lang2"],
   "repo_quality_assessment": "Analysis of their projects focusing on complexity and scale",
   "red_flags": [],
-  "green_flags": ["has highly starred repos", "diverse languages"]
+  "green_flags": ["has highly starred repos", "diverse languages"],
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the GitHub data."
 }
 
 GitHub Data:

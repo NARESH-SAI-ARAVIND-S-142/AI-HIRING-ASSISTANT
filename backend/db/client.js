@@ -17,7 +17,9 @@ const candidateSchema = new mongoose.Schema({
   name: String,
   email: String,
   github_url: String,
+  github_status: String,
   job_title: String,
+  skills_graph: Object,
   
   resume_score: Number,
   github_score: Number,
@@ -31,8 +33,40 @@ const candidateSchema = new mongoose.Schema({
   match_data: Object,
   debate_result: Object,
   explanation: Object,
+  bias_audit: Object,
 
   created_at: { type: Date, default: Date.now }
 });
 
 export const Candidate = mongoose.model('Candidate', candidateSchema);
+
+const evaluationLogSchema = new mongoose.Schema({
+  evaluation_id: { type: String, required: true, index: true },
+  candidate_name: String,
+  github_username: String,
+  job_description: String,
+  timestamp: { type: Date, default: Date.now, index: true },
+  agents: [{
+    agent_name: String,
+    started_at: Date,
+    completed_at: Date,
+    input_summary: String,
+    output: Object,
+    confidence_score: Number,
+    reasoning: String
+  }],
+  final_verdict: {
+    score: Number,
+    recommendation: String,
+    key_reasons: [String],
+    flags: [String]
+  },
+  human_review: {
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'flagged'], default: 'pending' },
+    reviewer_action: String,
+    reviewer_note: String,
+    reviewed_at: Date
+  }
+});
+
+export const EvaluationLog = mongoose.model('EvaluationLog', evaluationLogSchema);

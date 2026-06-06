@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FileSearch, ExternalLink, Sparkles, ChevronRight, Users } from 'lucide-react';
+import { FileSearch, ExternalLink, Sparkles, ChevronRight, Users, Activity } from 'lucide-react';
 import ScoreCard from '../components/ScoreCard';
 import DebatePanel from '../components/DebatePanel';
 import ConsistencyReport from '../components/ConsistencyReport';
+import HumanOverridePanel from '../components/HumanOverridePanel';
+import BiasBadge from '../components/BiasBadge';
+import SkillsGraph from '../components/SkillsGraph';
+import InterviewQuestions from '../components/InterviewQuestions';
 
 export default function Dashboard() {
   const [candidates, setCandidates] = useState([]);
@@ -127,13 +131,24 @@ export default function Dashboard() {
                   )}
                   {c.email && <span className="text-slate-500">{c.email}</span>}
                 </div>
+                <div className="mt-4">
+                  <BiasBadge biasAudit={c.bias_audit} />
+                </div>
               </div>
-              <div className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm shrink-0 ${
-                c.decision === 'Shortlist' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
-                c.decision === 'Review' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
-                'bg-red-500/20 text-red-400 border border-red-500/30'
-              }`}>
-                {c.decision}
+              <div className="flex flex-col gap-2 items-end shrink-0">
+                <div className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm text-center w-full ${
+                  c.decision === 'Shortlist' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+                  c.decision === 'Review' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
+                  'bg-red-500/20 text-red-400 border border-red-500/30'
+                }`}>
+                  {c.decision}
+                </div>
+                <Link 
+                  to={`/audit/${c.id}`} 
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 transition-colors"
+                >
+                  <Activity className="w-3.5 h-3.5 text-brand-cyan" /> Audit Report
+                </Link>
               </div>
             </div>
 
@@ -144,6 +159,19 @@ export default function Dashboard() {
               <ScoreCard title="GitHub" score={c.github_score} />
               <ScoreCard title="Match" score={c.match_score} />
             </div>
+
+            {/* GitHub Status Banner */}
+            {c.github_status && c.github_status !== 'audited' && (
+              <div className={`p-4 rounded-xl border flex items-center gap-3 text-sm font-medium ${
+                c.github_status === 'not_provided' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+                c.github_status === 'private' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+              }`}>
+                {c.github_status === 'not_provided' && 'No GitHub profile detected. Score based on resume signals only.'}
+                {c.github_status === 'private' && 'Candidate uses private repositories. GitHub audit unavailable.'}
+                {c.github_status === 'limited' && 'Limited public activity. Partial audit only.'}
+              </div>
+            )}
 
             {/* Explanation Box */}
             <motion.div 
@@ -165,6 +193,15 @@ export default function Dashboard() {
               <DebatePanel debate={c.debate_result} />
               <ConsistencyReport report={c.consistency_report} />
             </div>
+
+            {/* Skills Graph */}
+            <SkillsGraph skillsGraph={c.skills_graph} />
+
+            {/* Interview Questions Generator */}
+            <InterviewQuestions evaluationId={c.id} />
+
+            {/* Human Override Panel */}
+            <HumanOverridePanel evaluationId={c.id} />
           </motion.div>
         )}
       </AnimatePresence>

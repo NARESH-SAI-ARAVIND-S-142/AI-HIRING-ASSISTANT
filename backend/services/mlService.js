@@ -24,7 +24,7 @@ export const parseResume = async (fileBuffer, filename) => {
   return result.data;
 };
 
-export const getScores = async (parsedResume, githubData, jobKeywords) => {
+export const getScores = async (parsedResume, githubData, jobKeywords, githubStatus) => {
   const response = await fetch(`${ML_SERVICE_URL}/score`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,6 +32,7 @@ export const getScores = async (parsedResume, githubData, jobKeywords) => {
       parsed_resume: parsedResume,
       github_data: githubData,
       job_keywords: jobKeywords,
+      github_status: githubStatus
     }),
   });
 

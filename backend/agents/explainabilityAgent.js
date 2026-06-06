@@ -10,7 +10,9 @@ Return a JSON object:
 {
   "explanation_paragraph": "A single cohesive paragraph (about 3-4 sentences) explaining exactly why the candidate got their final score and decision, referencing both resume and GitHub data.",
   "key_strengths_phrases": ["Strong GitHub activity in React", "High match for core requirements"],
-  "key_weakness_phrases": ["Lack of backend experience", "Inconsistent open source activity"]
+  "key_weakness_phrases": ["Lack of backend experience", "Inconsistent open source activity"],
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the explanation data."
 }
 
 Candidate Data:

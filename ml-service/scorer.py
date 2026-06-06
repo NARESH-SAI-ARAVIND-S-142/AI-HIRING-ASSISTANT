@@ -111,13 +111,18 @@ def compute_resume_score(parsed_resume: dict) -> float:
     ]])
     
     score = _resume_model.predict(features)[0]
-    return round(float(np.clip(score, 0, 100)), 1)
+    score_val = round(float(np.clip(score, 0, 100)), 1)
+    
+    reasoning = f"Resume score: {score_val}/100. Extracted {parsed_resume.get('skill_count', 0)} skills, {parsed_resume.get('years_experience', 0)} years experience, and {parsed_resume.get('project_count', 0)} projects."
+    confidence = 0.9 if parsed_resume.get('skill_count', 0) > 3 else 0.5
+    
+    return score_val, reasoning, confidence
 
 
 def compute_github_score(github_data: dict) -> float:
     """Compute GitHub score from GitHub API data."""
     if not github_data or not github_data.get("repos"):
-        return 0.0
+        return 0.0, "No GitHub data provided or no public repositories found.", 0.2
     
     repos = github_data.get("repos", [])
     total_repos = len(repos)
@@ -149,7 +154,12 @@ def compute_github_score(github_data: dict) -> float:
     ]])
     
     score = _github_model.predict(features)[0]
-    return round(float(np.clip(score, 0, 100)), 1)
+    score_val = round(float(np.clip(score, 0, 100)), 1)
+    
+    reasoning = f"GitHub score: {score_val}/100. Evaluated {total_repos} repos, {total_stars} stars, and {languages_count} languages."
+    confidence = 0.9 if total_repos > 0 else 0.4
+    
+    return score_val, reasoning, confidence
 
 
 def compute_match_score(skills: list, job_keywords: list) -> float:
@@ -158,13 +168,13 @@ def compute_match_score(skills: list, job_keywords: list) -> float:
     This is a fallback — the real match scoring uses LLM semantic matching.
     """
     if not skills or not job_keywords:
-        return 50.0  # neutral
+        return 50.0, "Neutral match. Missing candidate skills or job keywords to compare.", 0.3
     
     skills_lower = [s.lower() for s in skills]
     keywords_lower = [k.lower() for k in job_keywords]
     
     if not keywords_lower:
-        return 50.0
+        return 50.0, "Neutral match. No job keywords to compare against.", 0.3
     
     # Check if any job keyword is a substring of any skill (or vice versa)
     matched = 0
@@ -174,17 +184,34 @@ def compute_match_score(skills: list, job_keywords: list) -> float:
             
     match_ratio = matched / len(keywords_lower)
     
-    score = match_ratio * 100
-    return round(float(np.clip(score, 0, 100)), 1)
+    score = match_score = match_ratio * 100
+    score_val = round(float(np.clip(score, 0, 100)), 1)
+    reasoning = f"Match score: {score_val}/100. Matched {matched} out of {len(keywords_lower)} job keywords."
+    confidence = 0.8
+    
+    return score_val, reasoning, confidence
 
 
-def compute_final_score(resume_score: float, github_score: float, match_score: float) -> float:
+def compute_final_score(resume_score: float, github_score: float, match_score: float, github_status: str = "audited") -> float:
     """
     Compute final weighted score.
     final_score = 0.5 * resume_score + 0.4 * github_score + 0.1 * match_score
     """
-    final = 0.5 * resume_score + 0.4 * github_score + 0.1 * match_score
-    return round(float(np.clip(final, 0, 100)), 1)
+    if github_status in ["not_provided", "private"]:
+        final = 0.8 * resume_score + 0.2 * match_score
+        reasoning = f"Final score: {round(float(np.clip(final, 0, 100)), 1)}/100. Weighted sum of resume (80%) and match (20%) due to unavailable GitHub."
+        confidence = 0.7
+    elif github_status == "limited":
+        final = 0.6 * resume_score + 0.2 * github_score + 0.2 * match_score
+        reasoning = f"Final score: {round(float(np.clip(final, 0, 100)), 1)}/100. Adjusted weights due to limited GitHub data."
+        confidence = 0.8
+    else:
+        final = 0.5 * resume_score + 0.4 * github_score + 0.1 * match_score
+        reasoning = f"Final score: {round(float(np.clip(final, 0, 100)), 1)}/100. Weighted sum of resume (50%), GitHub (40%), and match (10%)."
+        confidence = 0.85
+        
+    score_val = round(float(np.clip(final, 0, 100)), 1)
+    return score_val, reasoning, confidence
 
 
 def get_decision(final_score: float) -> str:

@@ -12,7 +12,9 @@ Return ONLY the JSON with the following structure:
   "projects": ["project1", "project2"],
   "strengths": ["strength1", "strength2"],
   "weaknesses": ["weakness1", "weakness2"],
-  "overall_summary": "A 2 sentence summary of the candidate's profile."
+  "overall_summary": "A 2 sentence summary of the candidate's profile.",
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the resume data."
 }
 
 Resume Text:

@@ -11,7 +11,9 @@ Return a JSON object:
   "matched_skills": [""],
   "missing_critical_skills": [""],
   "gap_analysis": "2 sentence explanation of the gap between candidate and job.",
-  "transferable_skills": ["e.g. Has Vue but Job asks for React, understands component lifecycle"]
+  "transferable_skills": ["e.g. Has Vue but Job asks for React, understands component lifecycle"],
+  "confidence_score": 0.9, // Float 0.0-1.0, lower when data is sparse
+  "reasoning": "Explain why this confidence score was given based on the match data."
 }
 
 Candidate Skills:

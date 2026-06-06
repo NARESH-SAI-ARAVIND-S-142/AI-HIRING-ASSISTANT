@@ -3,7 +3,7 @@ import { upload } from '../middleware/upload.js';
 import { parseResume, getScores } from '../services/mlService.js';
 import { fetchGitHubProfile } from '../services/githubService.js';
 import { runEvaluationPipeline } from '../services/agentOrchestrator.js';
-import { Candidate } from '../db/client.js';
+import { Candidate, EvaluationLog } from '../db/client.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -35,21 +35,33 @@ router.post('/', upload.single('resume'), async (req, res) => {
       }
     }
 
-    // 3. Get ML Scores
+    // 3. Determine GitHub Status
+    let githubStatus = 'not_provided';
+    if (githubData) {
+      const publicRepos = githubData.public_repos || 0;
+      if (publicRepos === 0) githubStatus = 'private';
+      else if (publicRepos < 5) githubStatus = 'limited';
+      else githubStatus = 'audited';
+    }
+
+    // 4. Get ML Scores
     console.log("-> Computings ML Scores...");
     const jobKeywords = jobDescription.toLowerCase().match(/\b\w+\b/g) || [];
-    const mlScoreData = await getScores(parsedResume, githubData, jobKeywords);
+    const mlScoreData = await getScores(parsedResume, githubData, jobKeywords, githubStatus);
 
-    // 4. Run the Agent Pipeline
+    // 5. Run the Agent Pipeline
     const agentResults = await runEvaluationPipeline(parsedResume, githubData, mlScoreData.scores, jobDescription);
 
     // 5. Save to DB
+    const evalId = uuidv4();
     const candidateRecord = new Candidate({
-      id: uuidv4(),
+      id: evalId,
       name: parsedResume.name,
       email: parsedResume.email,
       github_url: gitUrl,
+      github_status: githubStatus,
       job_title: jobDescription.split('\n')[0].substring(0, 50),
+      skills_graph: parsedResume.skills_graph,
       
       resume_score: mlScoreData.scores.resume_score,
       github_score: mlScoreData.scores.github_score,
@@ -63,10 +75,28 @@ router.post('/', upload.single('resume'), async (req, res) => {
       match_data: agentResults.matchData,
       debate_result: agentResults.debateResult,
       explanation: agentResults.explanation,
+      bias_audit: mlScoreData.bias_audit,
     });
 
     await candidateRecord.save();
     console.log(`-> Saved Candidate ${parsedResume.name} with ID ${candidateRecord.id}`);
+
+    const evaluationLog = new EvaluationLog({
+      evaluation_id: evalId,
+      candidate_name: parsedResume.name,
+      github_username: githubData ? githubData.username : null,
+      job_description: jobDescription,
+      agents: agentResults.agentsLog,
+      final_verdict: {
+        score: mlScoreData.scores.final_score,
+        recommendation: mlScoreData.decision,
+        key_reasons: agentResults.explanation.key_strengths_phrases.concat(agentResults.explanation.key_weakness_phrases),
+        flags: agentResults.githubAssessment ? agentResults.githubAssessment.red_flags : []
+      }
+    });
+
+    await evaluationLog.save();
+    console.log(`-> Saved Evaluation Log for ID ${evalId}`);
 
     res.json({
       success: true,

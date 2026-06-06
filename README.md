@@ -14,7 +14,7 @@ HireSync AI is a state-of-the-art, decentralized hiring platform that moves beyo
 graph TD
     User((Hiring Manager)) -->|Upload PDF| Dashboard[React Dashboard]
     Dashboard -->|POST /evaluate| Backend[Node.js API]
-    Backend -->|Extract Data| ML[Python ML Service]
+    Backend -->|Extract Data & Bias Check| ML[Python ML Service]
     Backend -->|Fetch Profile| GitHub((GitHub API))
     
     subgraph "Multi-Agent Hive Mind"
@@ -31,7 +31,9 @@ graph TD
     GitHub --> Agent2
     ML --> Agent3
     Agent4 -->|Audit| Agent6
-    Agent6 -->|Verdict| Dashboard
+    Agent6 -->|Verdict & Logs| Backend
+    Backend -->|Persist Audit Trail| DB[(MongoDB)]
+    Dashboard -->|Human Review| DB
 ```
 
 ---
@@ -39,8 +41,38 @@ graph TD
 ## ✨ Key Features
 - **Integrity Auditing**: Automatically cross-references resume claims (e.g., "5 years of Python") against actual GitHub commit history and repository languages.
 - **AI Recruiter Debate**: Simulates a conference room where 3 distinct AI recruiter personas argue over the candidate's viability to find the ultimate truth.
+- **Audit Trail & Explainability Engine**: Tracks every agent's confidence score and reasoning in a timeline view (`/audit/:id`) for full transparency.
+- **Human-in-the-Loop (HITL)**: Recruiter review panel allows hiring managers to override, approve, or flag AI decisions to ensure human oversight.
+- **Bias Detection Layer**: Runs an automated audit on anonymized resume data to flag potential AI score discrepancies based on protected attributes (name, gender, university).
+- **Skills Graph Engine**: Extracts a structured dependency graph of skills (e.g., React expects Javascript) and highlights missing adjacent skills.
+- **Multi-Candidate Comparison**: Side-by-side radar charts and tabular comparison of candidates.
+- **Interview Question Generator**: Tailored probing questions generated on-the-fly based on detected skill gaps and inconsistencies.
 - **Premium UX/UI**: A fluid, obsidian-themed dashboard powered by **Framer Motion** and **Tailwind CSS**.
-- **Dynamic Matching**: Real-time evaluation against custom, ad-hoc job descriptions typed by the user.
+
+---
+
+## ⚖️ Compliance & Ethics Notes
+- **Explainable AI (XAI)**: All AI decisions are logged with deterministic reasoning traces. You can view these logs directly in the platform to understand *why* a candidate was flagged.
+- **Fairness Check**: The platform runs a dual-pass evaluation (original vs. anonymized) to detect potential model bias. If the score delta is greater than 8 points, it flags a "Bias Risk".
+- **Human Oversight**: The AI acts as an **advisor, not a final decision-maker**. The Recruiter Review module guarantees that human operators maintain control over final hiring outcomes.
+
+---
+
+## ⚠️ Limitations
+- **GitHub Dependency**: If a candidate uses GitLab, Bitbucket, or private repositories, the GitHub Agent will fallback to a "limited" or "private" status and rely primarily on resume signals.
+- **Skill Extraction Heuristics**: The Skills Graph relies on predefined categories and adjacent skill rules. Extremely niche or proprietary tools may not be correctly categorized.
+- **LLM Hallucinations**: Despite the Consistency Checker and Debate Agents, underlying LLM hallucinations can occur. Always verify generated interview questions.
+
+---
+
+## 🔌 API Reference
+### Core Routes
+- `POST /api/evaluate`: Runs the full extraction, ML scoring, and Multi-Agent pipeline.
+- `GET /api/candidates`: Returns all processed candidates for the dashboard.
+- `GET /api/evaluations`: Paginated audit logs of all AI agent interactions.
+- `GET /api/evaluations/:id`: Fetches the detailed agent timeline for a specific evaluation.
+- `PATCH /api/evaluations/:id/review`: Submits a human override or approval with notes.
+- `POST /api/evaluations/:id/interview-questions`: Generates tailored interview questions based on candidate gaps.
 
 ---
 

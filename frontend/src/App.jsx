@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import Home from './pages/Home';
 import Evaluate from './pages/Evaluate';
 import Dashboard from './pages/Dashboard';
-import { FileSearch, LayoutDashboard, Sparkles } from 'lucide-react';
+import AuditLog from './pages/AuditLog';
+import Compare from './pages/Compare';
+import { FileSearch, LayoutDashboard, Sparkles, SplitSquareHorizontal } from 'lucide-react';
 
 function NavLink({ to, icon: Icon, children }) {
   const location = useLocation();
@@ -45,6 +47,7 @@ function NavBar() {
           <div className="flex space-x-1 pl-6 border-l border-white/10">
             <NavLink to="/evaluate" icon={FileSearch}>Evaluate</NavLink>
             <NavLink to="/dashboard" icon={LayoutDashboard}>Dashboard</NavLink>
+            <NavLink to="/compare" icon={SplitSquareHorizontal}>Compare Candidates</NavLink>
           </div>
         </div>
       </div>
@@ -70,6 +73,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/evaluate" element={<Evaluate />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/compare" element={<Compare />} />
+            <Route path="/audit/:id" element={<AuditLog />} />
           </Routes>
         </main>
       </div>
