@@ -1,4 +1,4 @@
-import { runAgent } from './gemini.js';
+import { model, extractJSON } from './gemini.js';
 
 const SYSTEM_PROMPT = `You are an expert technical interviewer and hiring manager.
 Your task is to generate highly tailored, specific interview questions for a candidate based on their resume, the job description, their skill graph, and any consistencies/inconsistencies found in their profile.
@@ -21,6 +21,8 @@ Return your response as a JSON object matching this schema:
 
 export const generateInterviewQuestions = async (jobDescription, parsedResume, skillsGraph, consistencyReport) => {
   const prompt = `
+  ${SYSTEM_PROMPT}
+  
   Job Description:
   ${jobDescription}
 
@@ -40,5 +42,7 @@ export const generateInterviewQuestions = async (jobDescription, parsedResume, s
   Generate tailored interview questions based on the above.
   `;
 
-  return await runAgent(SYSTEM_PROMPT, prompt);
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+  return extractJSON(responseText);
 };

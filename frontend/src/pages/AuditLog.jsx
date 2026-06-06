@@ -100,7 +100,7 @@ export default function AuditLog() {
                   <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                     <div 
                       className={`h-1.5 rounded-full ${conf >= 0.8 ? 'bg-emerald-500' : conf >= 0.5 ? 'bg-amber-500' : 'bg-red-500'}`}
-                      style={{ width: \`\${conf * 100}%\` }}
+                      style={{ width: `${conf * 100}%` }}
                     ></div>
                   </div>
                 </div>
